@@ -1,0 +1,12 @@
+# Ignore build folders
+build/
+cmake-build-debug/
+cmake-build-release/
+
+# Ignore IDE specific files
+.vscode/
+.idea/
+
+# Ignore generated files
+*.json
+*.log
