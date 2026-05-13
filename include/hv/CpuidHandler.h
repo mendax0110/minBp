@@ -69,7 +69,7 @@ namespace kvm
          * @param vcpu The vCPU that triggered the exit.
          * @return false if a fatal register read/write error occurred.
          */
-        [[nodiscard]] bool handle(VCpu& vcpu);
+        [[nodiscard]] bool handle(const VCpu& vcpu);
 
         /**
          * @brief Number of CPUID exits handled since construction.

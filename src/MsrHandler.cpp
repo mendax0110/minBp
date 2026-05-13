@@ -20,7 +20,7 @@ void MsrHandler::registerWrite(const uint32_t msr_index, WriteCallback cb)
     m_writeCallbacks[msr_index] = std::move(cb);
 }
 
-std::error_code MsrHandler::installFilter(int vm_fd) const
+std::error_code MsrHandler::installFilter(const int vm_fd) const
 {
     std::vector<uint32_t> indices;
     indices.reserve(m_readCallbacks.size() + m_writeCallbacks.size());
@@ -66,7 +66,7 @@ std::error_code MsrHandler::installFilter(int vm_fd) const
 
     if (::ioctl(vm_fd, KVM_X86_SET_MSR_FILTER, &filter) < 0)
     {
-        return std::error_code(errno, std::generic_category());
+        return {errno, std::generic_category()};
     }
 
     return {};

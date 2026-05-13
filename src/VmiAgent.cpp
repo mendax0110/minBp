@@ -147,7 +147,7 @@ void VmiAgent::handleHvEvent(const HvEvent& event)
     }
 }
 
-std::string VmiAgent::buildSummary(const HvEvent& event, const GuestSnapshot& snap) const
+std::string VmiAgent::buildSummary(const HvEvent& event, const GuestSnapshot& snap)
 {
     std::ostringstream oss;
     oss << std::hex << std::uppercase;
@@ -210,8 +210,8 @@ void VmiAgent::dumpEventLog(const std::filesystem::path& path) const
         out << "  {\n"
             << "    \"timestamp\": " << std::dec  << ts                    << ",\n"
             << "    \"vcpu_id\": "   << std::dec  << base.vcpu_id       << ",\n"
-            << "    \"rip\": \"0x"   << std::hex  << snapshot.rip       << "\",\n"
-            << "    \"summary\": \"" << summary << "\"";
+            << R"(    "rip": "0x)"   << std::hex  << snapshot.rip       << "\",\n"
+            << R"(    "summary": ")" << summary << "\"";
 
         if (memDump.has_value())
         {

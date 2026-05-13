@@ -86,7 +86,7 @@ std::error_code VirtualMachine::setIrqLine(const uint32_t irq, const int level) 
 
     if (::ioctl(m_fd, KVM_IRQ_LINE, &kill) < 0)
     {
-        return std::error_code(errno, std::generic_category());
+        return {errno, std::generic_category()};
     }
     return {};
 }
@@ -95,7 +95,7 @@ std::error_code VirtualMachine::createIrqChip() const
 {
     if (::ioctl(m_fd, KVM_CREATE_IRQCHIP, 0) < 0)
     {
-        return std::error_code(errno, std::generic_category());
+        return {errno, std::generic_category()};
     }
     return {};
 }
@@ -106,7 +106,7 @@ std::error_code VirtualMachine::createPit2() const
     pit_cfg.flags = 0;
     if (::ioctl(m_fd, KVM_CREATE_PIT2, &pit_cfg) < 0)
     {
-        return std::error_code(errno, std::generic_category());
+        return {errno, std::generic_category()};
     }
     return {};
 }
@@ -138,7 +138,7 @@ std::error_code VirtualMachine::enableEmulationExits() const
     cap.args[0] = 1;
     if (::ioctl(m_fd, KVM_ENABLE_CAP, &cap) < 0)
     {
-        return std::error_code(errno, std::generic_category());
+        return {errno, std::generic_category()};
     }
     return {};
 }

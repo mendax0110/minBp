@@ -105,7 +105,7 @@ std::error_code VCpu::setRegs(const kvm_regs& regs) const
 {
     if (::ioctl(m_fd, KVM_SET_REGS, &regs) < 0)
     {
-        return std::error_code(errno, std::generic_category());
+        return {errno, std::generic_category()};
     }
     return {};
 }
@@ -124,7 +124,7 @@ std::error_code VCpu::setSregs(const kvm_sregs& sregs) const
 {
     if (::ioctl(m_fd, KVM_SET_SREGS, &sregs) < 0)
     {
-        return std::error_code(errno, std::generic_category());
+        return {errno, std::generic_category()};
     }
     return {};
 }
@@ -139,7 +139,7 @@ std::error_code VCpu::setSingleStep(const bool enable) const
 
     if (::ioctl(m_fd, KVM_SET_GUEST_DEBUG, &dbg) < 0)
     {
-        return std::error_code(errno, std::generic_category());
+        return {errno, std::generic_category()};
     }
     return {};
 }
@@ -170,7 +170,7 @@ std::error_code VCpu::installCpuid(const std::vector<kvm_cpuid_entry2>& entries)
 
     if (::ioctl(m_fd, KVM_SET_CPUID2, buf.data()) < 0)
     {
-        return std::error_code(errno, std::generic_category());
+        return {errno, std::generic_category()};
     }
     return {};
 }

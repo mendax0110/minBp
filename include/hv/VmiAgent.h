@@ -120,7 +120,7 @@ namespace kvm
 
     private:
         void handleHvEvent(const HvEvent& event);
-        [[nodiscard]] std::string buildSummary(const HvEvent& event, const GuestSnapshot& snap) const;
+        [[nodiscard]] static std::string buildSummary(const HvEvent& event, const GuestSnapshot& snap);
 
         VirtualMachine* m_vm{nullptr};
         EventDispatcher* m_dispatch{nullptr};

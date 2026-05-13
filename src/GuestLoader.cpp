@@ -13,7 +13,7 @@ std::error_code GuestLoader::load(VirtualMachine& vm, const GuestLoadParams& par
     const auto bytes = readFile(params.imagePath);
     if (bytes.empty())
     {
-        return std::error_code(ENONET, std::generic_category());
+        return {ENONET, std::generic_category()};
     }
 
     auto regioResult = vm.addMemoryRegion(0, params.memorySize);
@@ -27,7 +27,7 @@ std::error_code GuestLoader::load(VirtualMachine& vm, const GuestLoadParams& par
     const size_t offset = params.loadAddress;
     if (offset + bytes.size() > region->size())
     {
-        return std::error_code(ENOMEM, std::generic_category());
+        return {ENOMEM, std::generic_category()};
     }
 
     const auto bytesAsSpan = std::as_bytes(std::span(bytes));
@@ -39,7 +39,7 @@ std::error_code GuestLoader::load(VirtualMachine& vm, const GuestLoadParams& par
         return vcpuResult.error();
     }
 
-    VCpu* vcpu = *vcpuResult;
+    const VCpu* vcpu = *vcpuResult;
 
     switch (params.mode)
     {
@@ -71,7 +71,7 @@ std::error_code GuestLoader::loadBytes(VirtualMachine& vm, const std::span<const
     const MemoryRegion* region = *regionResult;
     if (load_addr + code.size() > region->size())
     {
-        return std::error_code(ENOMEM, std::generic_category());
+        return {ENOMEM, std::generic_category()};
     }
 
     const auto bytesAsSpan = std::as_bytes(code);
@@ -200,7 +200,7 @@ std::error_code GuestLoader::buildIdentityPageTables(const VirtualMachine& vm, c
             continue; // This region doesn't cover the page tables
         }
 
-        const size_t offset = static_cast<size_t>(base_addr - rbase);
+        const auto offset = static_cast<size_t>(base_addr - rbase);
         auto* p = static_cast<uint64_t*>(region.hostAddr());
         auto* tables = reinterpret_cast<uint64_t*>(reinterpret_cast<uint8_t*>(p) + offset);
 
@@ -224,7 +224,7 @@ std::error_code GuestLoader::buildIdentityPageTables(const VirtualMachine& vm, c
         return {};
     }
 
-    return std::error_code(ENONET, std::generic_category());
+    return {ENONET, std::generic_category()};
 }
 
 std::vector<uint8_t> GuestLoader::readFile(const std::filesystem::path& path)
@@ -234,5 +234,5 @@ std::vector<uint8_t> GuestLoader::readFile(const std::filesystem::path& path)
     {
         return {};
     }
-    return std::vector<uint8_t>(std::istreambuf_iterator<char>(file), std::istreambuf_iterator<char>());
+    return {std::istreambuf_iterator<char>(file), std::istreambuf_iterator<char>()};
 }

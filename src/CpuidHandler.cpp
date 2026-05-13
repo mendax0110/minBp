@@ -9,17 +9,17 @@ void CpuidHandler::registerLeaf(const uint32_t leaf, LeafCallback callback)
     m_leafCallbacks[leaf] = std::move(callback);
 }
 
-bool CpuidHandler::handle(VCpu& vcpu)
+bool CpuidHandler::handle(const VCpu& vcpu)
 {
-    auto regs_result = vcpu.getRegs();
+    const auto regs_result = vcpu.getRegs();
     if (!regs_result)
     {
         return false;
     }
 
     auto regs = *regs_result;
-    const uint32_t leaf = static_cast<uint32_t>(regs.rax);
-    const uint32_t subleaf = static_cast<uint32_t>(regs.rcx);
+    const auto leaf = static_cast<uint32_t>(regs.rax);
+    const auto subleaf = static_cast<uint32_t>(regs.rcx);
 
     LeafResult result{};
     if (const auto it = m_leafCallbacks.find(leaf); it != m_leafCallbacks.end())
