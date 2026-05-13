@@ -8,6 +8,7 @@ intercepts instruction-level exits, and provides a Virtual Machine Introspection
 
 - Creates and manages a KVM virtual machine from userspace
 - Traps and handles `IN`/`OUT` port I/O exits with registered callbacks
+- Traps and handles `KVM_EXIT_MMIO` reads/writes with guest-physical address callbacks
 - Builds and installs a CPUID table via `KVM_SET_CPUID2` with per-leaf modification support
 - Masks the hypervisor-present bit in CPUID leaf 1 ECX to hide from the guest
 - Publishes all guest exits to an event dispatcher

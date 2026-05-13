@@ -57,9 +57,20 @@ namespace kvm
     };
 
     /**
+     * @brief Payload associated with an MMIO event.
+     */
+    struct MmioEvent
+    {
+        uint64_t guest_phys_addr{0};
+        uint8_t size{0};
+        uint64_t value{0};
+        bool isWrite{false};
+    };
+
+    /**
      * @brief Union-like event payload.
      */
-    using EventPayload = std::variant<CpuidEvent, IoEvent, MsrEvent, std::monostate>;
+    using EventPayload = std::variant<CpuidEvent, IoEvent, MsrEvent, MmioEvent, std::monostate>;
 
     /**
      * @brief A single hypervisor event record.
@@ -132,6 +143,7 @@ namespace kvm
         [[nodiscard]] uint64_t publishedCount() const noexcept;
 
     private:
+        /// @brief Internal subscription record. \struct Subscription
         struct Subscription
         {
             SubscriptionId id{0};

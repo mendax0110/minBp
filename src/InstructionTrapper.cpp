@@ -2,8 +2,10 @@
 #include "hv/CpuidHandler.h"
 #include "hv/IoPortHandler.h"
 #include "hv/MsrHandler.h"
+#include "hv/MmioHandler.h"
 #include "hv/EventDispatcher.h"
 #include "hv/VCpu.h"
+#include <algorithm>
 #include <cstring>
 #include <iostream>
 
@@ -11,11 +13,17 @@
 
 using namespace kvm;
 
-InstructionTrapper::InstructionTrapper(VCpu* vcpu, CpuidHandler* cpuid, IoPortHandler* io, MsrHandler* msr, EventDispatcher* dispatch) noexcept
+InstructionTrapper::InstructionTrapper(VCpu* vcpu,
+                                       CpuidHandler* cpuid,
+                                       IoPortHandler* io,
+                                       MsrHandler* msr,
+                                       MmioHandler* mmio,
+                                       EventDispatcher* dispatch) noexcept
     : m_vcpu(vcpu)
     , m_cpuid(cpuid)
     , m_io(io)
     , m_msr(msr)
+    , m_mmio(mmio)
     , m_dispatch(dispatch)
 {
 
@@ -142,6 +150,33 @@ InstructionTrapper::RunResult InstructionTrapper::dispatchExit(ExitReason reason
         }
         case ExitReason::Mmio:
         {
+            if (m_mmio && !m_mmio->handle(*run))
+            {
+                return RunResult::Error;
+            }
+
+            if (m_dispatch)
+            {
+                const auto& mmio = run->mmio;
+
+                MmioEvent payload{};
+                payload.guest_phys_addr = mmio.phys_addr;
+                payload.size = mmio.len;
+                payload.isWrite = (mmio.is_write != 0);
+                std::memcpy(&payload.value, mmio.data, std::min<uint8_t>(mmio.len, 8));
+
+                HvEvent ev{};
+                ev.type = EventType::MemAccess;
+                ev.vcpu_id = m_vcpu->id();
+                ev.payload = payload;
+                ev.timestamp = std::chrono::steady_clock::now();
+                if (auto regs = m_vcpu->getRegs(); regs)
+                {
+                    ev.rip = regs->rip;
+                }
+                m_dispatch->publish(ev);
+            }
+
             return RunResult::Continue;
         }
         case ExitReason::InternalError:

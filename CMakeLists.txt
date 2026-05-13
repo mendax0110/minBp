@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 3.25)
 project(minBp VERSION 1.0.0 LANGUAGES CXX)
 
+include(FetchContent)
+
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
@@ -35,6 +37,7 @@ target_sources(kvm_hypervisor_lib
         src/CpuidHandler.cpp
         src/IoPortHandler.cpp
         src/MsrHandler.cpp
+        src/MmioHandler.cpp
         src/VmiAgent.cpp
         src/EventDispatcher.cpp
         src/GuestLoader.cpp
@@ -58,5 +61,17 @@ target_link_libraries(kvm_hypervisor
         kvm_hypervisor_lib
 )
 
-enable_testing()
-add_subdirectory(tests)
+option(MINBP_BUILD_TESTS "Build minBp unit tests" ON)
+
+if (MINBP_BUILD_TESTS)
+    enable_testing()
+
+    FetchContent_Declare(
+            googletest
+            URL https://github.com/google/googletest/archive/refs/tags/v1.15.2.zip
+    )
+    set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
+    FetchContent_MakeAvailable(googletest)
+
+    add_subdirectory(tests)
+endif()

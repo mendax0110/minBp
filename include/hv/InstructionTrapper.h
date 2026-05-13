@@ -11,6 +11,7 @@ namespace kvm
     class CpuidHandler;
     class IoPortHandler;
     class MsrHandler;
+    class MmioHandler;
     class EventDispatcher;
 
     /**
@@ -45,12 +46,14 @@ namespace kvm
          * @param cpuid CPUID leaf handler (may be nullptr = passthrough).
          * @param io I/O port handler   (may be nullptr = passthrough).
          * @param msr  MSR handler        (may be nullptr = passthrough).
+         * @param mmio MMIO handler        (may be nullptr = passthrough).
          * @param dispatch Event dispatcher for VMI notifications (may be nullptr).
          */
         InstructionTrapper(VCpu* vcpu,
                            CpuidHandler*    cpuid,
                            IoPortHandler*   io,
                            MsrHandler*      msr,
+                           MmioHandler*     mmio,
                            EventDispatcher* dispatch) noexcept;
 
         ~InstructionTrapper() = default;
@@ -79,12 +82,18 @@ namespace kvm
         [[nodiscard]] uint64_t exitCount() const noexcept;
 
     private:
+        /**
+         * @brief Dispatch a single exit reason to the appropriate handler.
+         * @param reason The exit reason to dispatch.
+         * @return A RunResult indicating how the loop should proceed.
+         */
         [[nodiscard]] RunResult dispatchExit(ExitReason reason) const;
 
         VCpu* m_vcpu{nullptr};
         CpuidHandler* m_cpuid{nullptr};
         IoPortHandler* m_io{nullptr};
         MsrHandler* m_msr{nullptr};
+        MmioHandler* m_mmio{nullptr};
         EventDispatcher* m_dispatch{nullptr};
         uint64_t m_exitCount{0};
     };

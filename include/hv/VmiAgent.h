@@ -119,7 +119,18 @@ namespace kvm
         [[nodiscard]] const std::vector<IntrospectionEvent>& eventLog() const noexcept;
 
     private:
+        /**
+         * @brief Internal event handler subscribed to the EventDispatcher.
+         * @param event The raw hypervisor event to process and enrich.
+         */
         void handleHvEvent(const HvEvent& event);
+
+        /**
+         * @brief Generate a human-readable summary for an introspection event.
+         * @param event The enriched event to summarize.
+         * @param snap The register snapshot associated with the event.
+         * @return A string summarizing the event context.
+         */
         [[nodiscard]] static std::string buildSummary(const HvEvent& event, const GuestSnapshot& snap);
 
         VirtualMachine* m_vm{nullptr};

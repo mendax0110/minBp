@@ -5,6 +5,7 @@
 #include "hv/CpuidHandler.h"
 #include "hv/IoPortHandler.h"
 #include "hv/MsrHandler.h"
+#include "hv/MmioHandler.h"
 #include "hv/InstructionTrapper.h"
 #include "hv/VmiAgent.h"
 #include "hv/EventDispatcher.h"
@@ -108,6 +109,7 @@ int main(int /*argc*/, char** /*argv*/)
     kvm::CpuidHandler    cpuid_handler;
     kvm::IoPortHandler   io_handler;
     kvm::MsrHandler      msr_handler;
+    kvm::MmioHandler     mmio_handler;
 
     // Mask the hypervisor-present bit in CPUID leaf 1 ECX.
     cpuid_handler.registerLeaf(0x01, [](uint32_t leaf, uint32_t sub)
@@ -146,6 +148,7 @@ int main(int /*argc*/, char** /*argv*/)
             case ET::IoWrite: std::print(std::cout, "  [OUT]   "); break;
             case ET::MsrRead: std::print(std::cout, "  [RDMSR] "); break;
             case ET::MsrWrite: std::print(std::cout, "  [WRMSR] "); break;
+            case ET::MemAccess: std::print(std::cout, "  [MMIO]  "); break;
             case ET::GuestHalt: std::print(std::cout, "  [HLT]   "); break;
             case ET::GuestShutdown: std::print(std::cout, "  [SHUT]  "); break;
             default: std::print(std::cout, "  [EVT]   "); break;
@@ -208,7 +211,7 @@ int main(int /*argc*/, char** /*argv*/)
     std::println("[+] VM snapshot taken ({} memory regions)", snapshot.memoryRegions.size());
 
     // Run
-    kvm::InstructionTrapper trapper(vcpu, &cpuid_handler, &io_handler, &msr_handler, &dispatcher);
+    kvm::InstructionTrapper trapper(vcpu, &cpuid_handler, &io_handler, &msr_handler, &mmio_handler, &dispatcher);
 
     static constexpr std::array<uint8_t, 3> fuzzInput = { 0x41, 0x42, 0x43 }; // 'A', 'B', 'C' scancodes
 

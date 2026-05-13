@@ -179,6 +179,13 @@ std::string VmiAgent::buildSummary(const HvEvent& event, const GuestSnapshot& sn
                 << " index=0x" << payload.index
                 << " value=0x" << payload.value;
         }
+        else if constexpr (std::is_same_v<T, MmioEvent>)
+        {
+            oss << (payload.isWrite ? "MMIO-WR" : "MMIO-RD")
+                << " gpa=0x" << payload.guest_phys_addr
+                << " size=" << std::dec << static_cast<uint32_t>(payload.size) << "B"
+                << " value=0x" << std::hex << payload.value;
+        }
         else
         {
             switch (event.type)
