@@ -2,13 +2,20 @@
 BITS 16
 ORG 0x1000
 
-; Set up the stack
-    mov si, 0x2000 ; Ptr to fuzz input buffer at GPA 0x2000
-    mov al, [si] ; read first byte
-    cmp al, 0x41 ; is the output A?
-    je .interesting ; if so, jump to interesting code
-    hlt ; otherwise, halt
+start:
+    ; Read MMIO magic
+    xor dx, dx
+    mov ds, dx
+    mov ax, 0x8000
+    mov ds, ax
+    xor eax, eax
+    mov ebx, [eax]
 
-.interesting:
-    in al, 0x60 ; read from keyboard controller
+    ; write to MMIO input
+    mov dword [eax + 0x08], 0x42
+
+    ; read MMIO status
+    mov ebx, [eax + 0x10]
+
+    cli
     hlt

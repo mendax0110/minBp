@@ -39,6 +39,17 @@ static constexpr std::array<uint8_t, 8> k_guestCode =
     0x00               // padding
 };
 
+static constexpr uint64_t k_mmio_base = 0x80000;
+static constexpr uint64_t k_reg_magic = k_mmio_base + 0x00;
+static constexpr uint64_t k_reg_input = k_mmio_base + 0x08;
+static constexpr uint64_t k_reg_status = k_mmio_base + 0x10;
+
+struct MmioDeviceState
+{
+    uint64_t last_write_value{0};
+    uint64_t write_count{0};
+};
+
 // Entry point
 int main(int /*argc*/, char** /*argv*/)
 {
@@ -94,7 +105,7 @@ int main(int /*argc*/, char** /*argv*/)
     if (auto ec = kvm::GuestLoader::loadBytes(vm,
             std::span<const uint8_t>(/*k_guestCode*/guestCodeBytes),
             /*load_addr=*/0x1000,
-            /*mem_size= */1 << 22);  // 4 MiB
+            /*mem_size= */1 << 19);  // 512 KiB; keep MMIO at 0x80000 outside RAM
         ec)
     {
         std::println(std::cerr, "[!] GuestLoader::loadBytes failed: {}", ec.message());
@@ -110,6 +121,7 @@ int main(int /*argc*/, char** /*argv*/)
     kvm::IoPortHandler   io_handler;
     kvm::MsrHandler      msr_handler;
     kvm::MmioHandler     mmio_handler;
+    MmioDeviceState mmio_state{};
 
     // Mask the hypervisor-present bit in CPUID leaf 1 ECX.
     cpuid_handler.registerLeaf(0x01, [](uint32_t leaf, uint32_t sub)
@@ -128,6 +140,27 @@ int main(int /*argc*/, char** /*argv*/)
     {
         std::println("  [IO] Guest read from port 0x60 (keyboard)");
         return 0x1A;//0x1C;  // 'A' scancode
+    });
+
+    mmio_handler.registerRead(k_reg_magic, [](const kvm::MmioHandler::ReadContext& ctx) -> uint64_t
+    {
+        static_cast<void>(ctx);
+        return 0x4D4D494F;
+    });
+
+    mmio_handler.registerWrite(k_reg_input, [&mmio_state](const kvm::MmioHandler::WriteContext& ctx)
+    {
+        mmio_state.last_write_value = ctx.value;
+        ++mmio_state.write_count;
+        std::println("  [MMIO] write input=0x{:x} (size={})", ctx.value, ctx.size);
+    });
+
+    mmio_handler.registerRead(k_reg_status, [&mmio_state](const kvm::MmioHandler::ReadContext& ctx) -> uint64_t
+    {
+        static_cast<void>(ctx);
+        const uint64_t count = (mmio_state.write_count & 0xFFFF'FFFFULL) << 32;
+        const uint64_t last = (mmio_state.last_write_value & 0xFFFF'FFFFULL);
+        return count | last;
     });
 
     // Wire up VMI agent

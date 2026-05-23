@@ -10,3 +10,6 @@ cmake-build-release/
 # Ignore generated files
 *.json
 *.log
+
+# ignoe bins
+*.bin
