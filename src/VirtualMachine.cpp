@@ -152,6 +152,11 @@ VmSnapShot VirtualMachine::takeSnapShot(VirtualMachine& vm)
 
     for (const auto& region : vm.memoryRegions())
     {
+        if (region.hostAddr() == nullptr)
+        {
+            snap.memoryRegions.emplace_back();
+            continue;
+        }
         auto* host = static_cast<std::byte*>(region.hostAddr());
         snap.memoryRegions.emplace_back(host, host + region.size());
     }
@@ -177,6 +182,10 @@ void VirtualMachine::restoreSnapshot(VirtualMachine& vm, const VmSnapShot& snaps
     for (size_t i = 0; i < vm.memoryRegions().size(); ++i)
     {
         auto& region = vm.memoryRegions()[i];
+        if (region.hostAddr() == nullptr || i >= snapshot.memoryRegions.size() || snapshot.memoryRegions[i].empty())
+        {
+            continue;
+        }
         std::memcpy(region.hostAddr(), snapshot.memoryRegions[i].data(), region.size());
     }
 }

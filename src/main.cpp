@@ -113,6 +113,7 @@ int main(int /*argc*/, char** /*argv*/)
     }
     std::println("[+] Guest code loaded at GPA 0x1000");
 
+
     kvm::VCpu *vcpu = &vm.vcpus()[0];
 
     // Set up handlers
